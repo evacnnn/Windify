@@ -27,9 +27,11 @@ Windify es una aplicación WPF ligera y moderna que permite seleccionar cualquie
 ---
 
 ## 💻 Requisitos
-
+### Para Ejecutar
 - Windows 10 / 11  
-- [.NET 9.0 SDK (Preview)](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)  
+- [.NET 9.0 (Runtime)](https://dotnet.microsoft.com/en-us/download/dotnet/thank-you/runtime-desktop-9.0.8-windows-x64-installer)
+### Para Compilar y Editar
+- [.NET 9.0 SDK (Preview)](https://dotnet.microsoft.com/en-us/download/dotnet/9.0)
 - Visual Studio 2022+ o VS Code con extensiones de C#  
 - Arquitectura: x64 (preferentemente)
 
