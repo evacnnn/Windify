@@ -21,7 +21,8 @@ Windify es una aplicación WPF ligera y moderna que permite seleccionar cualquie
 
 ## 📷 Captura de pantalla
 
-> *(Próximamente:)*
+<img width="400" height="340" alt="{35C30184-942B-4FC4-82F3-F971A9936BDE}" src="https://github.com/user-attachments/assets/20ed32a8-7c62-46c2-ab58-0832e19e8631" />
+
 
 ---
 
