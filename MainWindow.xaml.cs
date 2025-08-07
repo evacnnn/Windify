@@ -1,22 +1,43 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.ComponentModel;
 using System.Diagnostics;
 using System.Runtime.InteropServices;
 using System.Text;
 using System.Windows;
 using System.Windows.Controls;
 using System.Windows.Input;
+using System.Windows.Interop;
+using System.Windows.Media;
+using System.Windows.Media.Imaging;
 
 namespace Windify
 {
-    public partial class MainWindow : Window
+    public partial class MainWindow : Window, INotifyPropertyChanged
     {
+        public event PropertyChangedEventHandler? PropertyChanged;
+        private void OnPropertyChanged(string propertyName)
+        => PropertyChanged?.Invoke(this, new PropertyChangedEventArgs(propertyName));
         private IntPtr selectedWindow = IntPtr.Zero;
         private List<WindowInfo> openWindows = new();
+
+        public List<WindowInfo> OpenWindows => openWindows;
+
+        private WindowInfo selectedApp;
+        public WindowInfo SelectedApp
+        {
+            get => selectedApp;
+            set
+            {
+                selectedApp = value;
+                OnPropertyChanged(nameof(SelectedApp));
+            }
+        }
 
         public MainWindow()
         {
             InitializeComponent();
+            DataContext = this;
             RefreshWindowList();
         }
 
@@ -43,7 +64,37 @@ namespace Windify
         private const uint SWP_NOMOVE = 0x0002;
         private const uint SWP_SHOWWINDOW = 0x0040;
 
+        private const int WM_GETICON = 0x007F;
+        private const int ICON_SMALL2 = 2;
+        private const int GCL_HICON = -14;
+
+        [DllImport("user32.dll")]
+        private static extern IntPtr SendMessage(IntPtr hWnd, int msg, int wParam, int lParam);
+
+        [DllImport("user32.dll", EntryPoint = "GetClassLongPtr", SetLastError = true)]
+        private static extern IntPtr GetClassLongPtr(IntPtr hWnd, int nIndex);
+
         #endregion
+
+        private static ImageSource? GetIconFromWindow(IntPtr hWnd)
+        {
+            IntPtr hIcon = SendMessage(hWnd, WM_GETICON, ICON_SMALL2, 0);
+
+            if (hIcon == IntPtr.Zero)
+            {
+                hIcon = GetClassLongPtr(hWnd, GCL_HICON);
+            }
+
+            if (hIcon == IntPtr.Zero)
+            {
+                return null;
+            }
+
+            return Imaging.CreateBitmapSourceFromHIcon(
+                hIcon,
+                System.Windows.Int32Rect.Empty,
+                BitmapSizeOptions.FromEmptyOptions());
+        }
 
         private void RefreshWindowList()
         {
@@ -58,11 +109,19 @@ namespace Windify
 
                 var builder = new StringBuilder(length + 1);
                 GetWindowText(hWnd, builder, builder.Capacity);
+
                 string title = builder.ToString();
 
                 if (!string.IsNullOrWhiteSpace(title))
                 {
-                    openWindows.Add(new WindowInfo { Handle = hWnd, Title = title });
+                    var icon = GetIconFromWindow(hWnd);
+
+                    openWindows.Add(new WindowInfo
+                    {
+                        Handle = hWnd,
+                        Title = title,
+                        Icon = icon
+                    });
                 }
 
                 return true;
@@ -88,7 +147,8 @@ namespace Windify
             if (SuggestionsListBox.SelectedItem is string selectedTitle)
             {
                 SearchBox.Text = selectedTitle;
-                selectedWindow = openWindows.Find(w => w.Title == selectedTitle)?.Handle ?? IntPtr.Zero;
+                SelectedApp = openWindows.Find(w => w.Title == selectedTitle);
+                selectedWindow = SelectedApp?.Handle ?? IntPtr.Zero;
             }
 
             SuggestionsPopup.IsOpen = false;
@@ -104,7 +164,7 @@ namespace Windify
 
         private void SearchBox_LostFocus(object sender, RoutedEventArgs e)
         {
-            // Se maneja automáticamente con StaysOpen=False
+
         }
 
         private void SearchBox_PreviewKeyDown(object sender, KeyEventArgs e)
@@ -124,7 +184,7 @@ namespace Windify
             int exStyle = GetWindowLong(selectedWindow, GWL_EXSTYLE);
             SetWindowLong(selectedWindow, GWL_EXSTYLE, exStyle | WS_EX_LAYERED);
 
-            byte alpha = (byte)(e.NewValue * 2.55); // 0-100 -> 0-255
+            byte alpha = (byte)(e.NewValue * 2.55);
             SetLayeredWindowAttributes(selectedWindow, 0, alpha, LWA_ALPHA);
         }
 
@@ -144,12 +204,26 @@ namespace Windify
                 SWP_NOMOVE | SWP_NOSIZE | SWP_SHOWWINDOW);
         }
 
-        private class WindowInfo
+        public class WindowInfo
         {
             public IntPtr Handle { get; set; }
             public required string Title { get; set; }
+            public ImageSource? Icon { get; set; }
         }
 
-
+        private void Refresh_Click(object sender, RoutedEventArgs e)
+        {
+            RefreshWindowList();
+            SearchBox.Clear();
+            SuggestionsPopup.IsOpen = false;
+            selectedWindow = IntPtr.Zero;
+            SelectedApp = new WindowInfo
+            {
+                Handle = IntPtr.Zero,
+                Title = string.Empty,
+                Icon = null
+            };
+            selectedWindow = IntPtr.Zero;
+        }
     }
 }
