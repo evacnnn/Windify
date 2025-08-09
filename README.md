@@ -6,6 +6,8 @@
 Windify es una aplicación WPF ligera y moderna que permite seleccionar cualquier ventana abierta del sistema y controlar su **transparencia** y si debe estar **siempre visible (Always on Top)**. Inspirada en Fluent UI, ofrece una interfaz limpia y funcional.
 
 ---
+## ⤵️ Descarga
+- [Descargar](https://github.com/evacnnn/Windify/releases/download/v1.1EXE/Windify.exe)
 
 ## 🖼️ Características
 
@@ -49,5 +51,3 @@ Windify es una aplicación WPF ligera y moderna que permite seleccionar cualquie
 
 ---
 
-## ⤵️ Descarga
-- [Descargar](https://github.com/evacnnn/Windify/releases/tag/v1.1)
